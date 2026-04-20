@@ -4,6 +4,8 @@ Aplicação em Python para consolidar, analisar e exportar conversas extraídas 
 
 Esta publicação inicial no GitHub representa o conjunto consolidado de recursos da versão 5.2.
 
+<img width="2550" height="1262" alt="image" src="https://github.com/user-attachments/assets/6dac35db-4c91-45fa-9983-5478ef205618" />
+
 ## Aviso importante
 
 Este projeto trabalha com conteúdo potencialmente sensível.
