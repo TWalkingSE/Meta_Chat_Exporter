@@ -1,0 +1,25 @@
+PyQt6>=6.6.0
+beautifulsoup4>=4.12.0
+
+# Dependências opcionais
+#
+# Detecção de idioma mais precisa no painel de estatísticas:
+# langdetect>=1.0.9
+# ou instale manualmente com:
+# pip install langdetect
+#
+# Desenvolvimento / testes:
+# pip install -r requirements-dev.txt
+
+# Transcrição automática (opcional — instalar para usar o recurso de transcrição com Whisper)
+# pip install openai-whisper
+# 
+# Para GPU NVIDIA (CUDA), instale PyTorch com CUDA:
+# 
+# RTX série 50 ou GPUs mais recentes (CUDA 12.8):
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+# 
+# RTX série 40/30/20 ou GPUs mais antigas (CUDA 12.1):
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# 
+# Para outras versões de CUDA ou CPU, consulte: https://pytorch.org/get-started/locally/

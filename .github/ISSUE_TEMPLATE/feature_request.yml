@@ -1,0 +1,45 @@
+name: Feature request
+description: Sugira uma melhoria para o projeto.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use este formulario para propor uma melhoria de forma objetiva.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade
+      description: Qual dor, limitacao ou caso de uso motivou a sugestao?
+      placeholder: "Hoje o projeto nao atende bem este fluxo porque..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Solucao proposta
+      description: Descreva a funcionalidade desejada.
+      placeholder: "Seria util adicionar..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Quais outras abordagens voce avaliou?
+      placeholder: "Tambem considerei..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Inclua exemplos, mockups ou detalhes extras, se ajudarem.
+    validations:
+      required: false

@@ -1,0 +1,70 @@
+name: Bug report
+description: Relate um problema encontrado no projeto.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar um problema.
+        Antes de enviar, verifique se nao existe uma issue semelhante aberta.
+
+  - type: input
+    id: version
+    attributes:
+      label: Versao
+      description: Qual versao do projeto voce estava usando?
+      placeholder: "Ex.: 5.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema operacional
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Outro
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descricao do problema
+      description: Explique o que aconteceu.
+      placeholder: "O que deu errado?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Liste os passos na ordem em que o problema ocorre.
+      placeholder: |
+        1. Abrir a aplicacao
+        2. Selecionar a pasta...
+        3. Clicar em...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+      placeholder: "O que deveria acontecer?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, traceback ou exemplos
+      description: Cole mensagens de erro, traceback ou detalhes relevantes. Remova dados sensiveis antes de enviar.
+      render: text
+    validations:
+      required: false
