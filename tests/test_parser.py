@@ -2,18 +2,20 @@
 Testes para o módulo parser.py - Parser HTML de registros Meta
 """
 
-import sys
 import os
+import sys
 import unittest
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from parser import MetaRecordsParser
-from models import Thread, Message, Attachment, Participant
-import constants
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+from meta_chat_exporter import constants
+from meta_chat_exporter.parser import MetaRecordsParser, UnparsedReport
 
 
 class TestParserInit(unittest.TestCase):
@@ -41,7 +43,7 @@ class TestParserWithHTML(unittest.TestCase):
     def _create_temp_html(self, content: str, filename: str = "test_parse.html") -> str:
         """Cria arquivo HTML temporário para testes"""
         path = Path(__file__).parent / filename
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(content)
         return str(path)
 
@@ -65,19 +67,19 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertEqual(p.owner_username, "")
 
     def test_parse_no_unified_messages(self):
-        html = '<html><body><div>No messages here</div></body></html>'
+        html = "<html><body><div>No messages here</div></body></html>"
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
         self.assertEqual(result, [])
 
     def test_extract_owner_info(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div class="t">Account Identifier<div class="m"><div>testuser123</div></div></div>
         <div class="t">Target<div class="m"><div>9876543210</div></div></div>
         <div id="property-unified_messages">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         p.parse()
@@ -85,7 +87,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertEqual(p.owner_id, "9876543210")
 
     def test_parse_single_thread_with_message(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div class="t">Account Identifier<div class="m"><div>owner</div></div></div>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (12345678)
@@ -96,7 +98,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-other_section">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -114,7 +116,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertEqual(msg.sent.minute, 30)
 
     def test_parse_disappearing_message(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (99999999)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -126,7 +128,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -136,7 +138,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertEqual(msg.disappearing_duration, "24 hours")
 
     def test_parse_call_record(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (11111111)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -150,7 +152,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -161,7 +163,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertFalse(msg.call_missed)
 
     def test_parse_missed_call(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (22222222)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -175,7 +177,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -184,7 +186,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertTrue(msg.call_missed)
 
     def test_parse_attachment(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (33333333)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -195,7 +197,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -205,7 +207,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertIn("image", msg.attachments[0].file_type)
 
     def test_parse_share(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (44444444)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -219,7 +221,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -228,7 +230,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertEqual(msg.share_text, "Cool post!")
 
     def test_parse_multiple_messages_sorted(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (55555555)
         Current Participants<div class="m"><div>user1 (instagram: 100), user2 (instagram: 200)</div></div>
@@ -241,7 +243,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -251,7 +253,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertEqual(result[0].messages[1].body, "Second message")
 
     def test_parse_payment_detection(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (66666666)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -261,7 +263,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -269,7 +271,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertTrue(msg.has_payment)
 
     def test_parse_reaction_detection(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (77777777)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -279,7 +281,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -287,7 +289,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertTrue(msg.is_reaction)
 
     def test_parse_removed_by_sender(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (88888888)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -298,7 +300,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -306,7 +308,7 @@ class TestParserWithHTML(unittest.TestCase):
         self.assertTrue(msg.removed_by_sender)
 
     def test_source_file_set(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (11112222)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -316,14 +318,14 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
         self.assertEqual(result[0].messages[0].source_file, "test_parse.html")
 
     def test_parse_ai_enabled(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (99990000)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -334,14 +336,14 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
         self.assertTrue(result[0].ai_enabled)
 
     def test_parse_thread_name(self):
-        html = '''<html><body>
+        html = """<html><body>
         <div id="property-unified_messages">
         Thread<div class="m"><div>Conversa (11110000)
         Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
@@ -352,7 +354,7 @@ class TestParserWithHTML(unittest.TestCase):
         </div>
         <div id="property-end">
         </div>
-        </body></html>'''
+        </body></html>"""
         path = self._create_temp_html(html)
         p = MetaRecordsParser(path)
         result = p.parse()
@@ -364,8 +366,8 @@ class TestReadFileSafe(unittest.TestCase):
 
     def test_read_utf8(self):
         path = Path(__file__).parent / "test_encoding.html"
-        with open(path, 'w', encoding='utf-8') as f:
-            f.write('<html>Olá Açúcar Ñ</html>')
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("<html>Olá Açúcar Ñ</html>")
         p = MetaRecordsParser(str(path))
         content = p._read_file_safe()
         self.assertIn("Açúcar", content)
@@ -373,8 +375,8 @@ class TestReadFileSafe(unittest.TestCase):
 
     def test_read_latin1(self):
         path = Path(__file__).parent / "test_latin.html"
-        with open(path, 'wb') as f:
-            f.write('Olá Açúcar'.encode('latin-1'))
+        with open(path, "wb") as f:
+            f.write("Olá Açúcar".encode("latin-1"))
         p = MetaRecordsParser(str(path))
         content = p._read_file_safe()
         self.assertIsNotNone(content)
@@ -387,6 +389,235 @@ class TestReadFileSafe(unittest.TestCase):
         result = p.parse()
         self.assertEqual(result, [])
         path.unlink()
+
+
+class TestParseStats(unittest.TestCase):
+    """Testes para as estatísticas de parsing (falhas observáveis)."""
+
+    def _create_temp_html(self, content: str, filename: str = "test_stats.html") -> str:
+        path = Path(__file__).parent / filename
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return str(path)
+
+    def setUp(self):
+        constants.set_timezone_offset(timedelta(hours=-3))
+
+    def tearDown(self):
+        path = Path(__file__).parent / "test_stats.html"
+        if path.exists():
+            path.unlink()
+
+    def test_new_stats_keys(self):
+        p = MetaRecordsParser("any.html")
+        stats = p._new_stats()
+        for key in (
+            "threads_found",
+            "threads_kept",
+            "threads_discarded_empty",
+            "messages_parsed",
+            "messages_timestamp_errors",
+            "attachments_rejected_traversal",
+            "call_duration_errors",
+        ):
+            self.assertIn(key, stats)
+            self.assertEqual(stats[key], 0)
+
+    def test_stats_count_threads_and_messages(self):
+        html = """<html><body>
+        <div id="property-unified_messages">
+        Thread<div class="m"><div>Conversa (12345678)
+        Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
+        Author<div class="m"><div>user1 (instagram: 100)</div></div>
+        Sent<div class="m"><div>2024-01-15 13:30:00 UTC</div></div>
+        Body<div class="m"><div>Hello</div></div><div class="p"></div></div>
+        </div>
+        <div id="property-end">
+        </div>
+        </body></html>"""
+        path = self._create_temp_html(html)
+        p = MetaRecordsParser(path)
+        p.parse()
+        self.assertEqual(p.parse_stats["threads_found"], 1)
+        self.assertEqual(p.parse_stats["threads_kept"], 1)
+        self.assertEqual(p.parse_stats["threads_discarded_empty"], 0)
+        self.assertGreaterEqual(p.parse_stats["messages_parsed"], 1)
+
+    def test_stats_rejects_traversal_attachment(self):
+        html = """<html><body>
+        <div id="property-unified_messages">
+        Thread<div class="m"><div>Conversa (33333333)
+        Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
+        Author<div class="m"><div>user1 (instagram: 100)</div></div>
+        Sent<div class="m"><div>2024-02-01 10:00:00 UTC</div></div>
+        Body<div class="m"><div>bad</div></div>
+        Linked Media File:<div class="m"><div>../../etc/passwd</div></div>
+        </div>
+        <div id="property-end">
+        </div>
+        </body></html>"""
+        path = self._create_temp_html(html)
+        p = MetaRecordsParser(path)
+        result = p.parse()
+        self.assertEqual(p.parse_stats["attachments_rejected_traversal"], 1)
+        self.assertEqual(len(result[0].messages[0].attachments), 0)
+
+    def test_stats_reset_between_parses(self):
+        html = """<html><body>
+        <div id="property-unified_messages">
+        Thread<div class="m"><div>Conversa (44444444)
+        Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
+        Author<div class="m"><div>user1 (instagram: 100)</div></div>
+        Sent<div class="m"><div>2024-02-01 10:00:00 UTC</div></div>
+        Body<div class="m"><div>hi</div></div><div class="p"></div></div>
+        </div>
+        <div id="property-end">
+        </div>
+        </body></html>"""
+        path = self._create_temp_html(html)
+        p = MetaRecordsParser(path)
+        p.parse()
+        first = p.parse_stats["threads_found"]
+        p.parse()
+        self.assertEqual(p.parse_stats["threads_found"], first)
+
+
+class TestUnparsedReport(unittest.TestCase):
+    """Testes para o relatório de conteúdo não parseado (R34)."""
+
+    def _create_temp_html(self, content: str, filename: str = "test_unparsed.html") -> str:
+        path = Path(__file__).parent / filename
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return str(path)
+
+    def setUp(self):
+        constants.set_timezone_offset(timedelta(hours=-3))
+
+    def tearDown(self):
+        path = Path(__file__).parent / "test_unparsed.html"
+        if path.exists():
+            path.unlink()
+
+    def test_report_starts_empty(self):
+        # Sem processar nada, a contagem deve ser zero sem erro (R34.3)
+        p = MetaRecordsParser("any.html")
+        self.assertEqual(p.unparsed.count, 0)
+        self.assertEqual(p.unparsed.section_count, 0)
+        self.assertEqual(p.unparsed.message_count, 0)
+
+    def test_no_unparsed_when_all_valid(self):
+        html = """<html><body>
+        <div id="property-unified_messages">
+        Thread<div class="m"><div>Conversa (12345678)
+        Current Participants<div class="m"><div>user1 (instagram: 100)</div></div>
+        Author<div class="m"><div>user1 (instagram: 100)</div></div>
+        Sent<div class="m"><div>2024-01-15 13:30:00 UTC</div></div>
+        Body<div class="m"><div>Hello</div></div><div class="p"></div></div>
+        </div>
+        <div id="property-end">
+        </div>
+        </body></html>"""
+        path = self._create_temp_html(html)
+        p = MetaRecordsParser(path)
+        p.parse()
+        self.assertEqual(p.unparsed.count, 0)
+
+    def test_missing_section_recorded(self):
+        html = "<html><body><div>No messages here</div></body></html>"
+        path = self._create_temp_html(html)
+        p = MetaRecordsParser(path)
+        p.parse()
+        self.assertEqual(p.unparsed.section_count, 1)
+        self.assertEqual(p.unparsed.count, 1)
+        self.assertEqual(p.unparsed.items[0].kind, "section")
+
+    def test_count_matches_recorded_items(self):
+        report = UnparsedReport()
+        report.record_section("motivo", "a.html")
+        report.record_message("motivo", "a.html")
+        report.record_message("motivo", "a.html")
+        self.assertEqual(report.count, 3)
+        self.assertEqual(report.section_count, 1)
+        self.assertEqual(report.message_count, 2)
+
+    def test_clear_resets_report(self):
+        report = UnparsedReport()
+        report.record_section("motivo", "a.html")
+        report.clear()
+        self.assertEqual(report.count, 0)
+
+    def test_report_resets_between_parses(self):
+        html = "<html><body><div>No messages here</div></body></html>"
+        path = self._create_temp_html(html)
+        p = MetaRecordsParser(path)
+        p.parse()
+        first = p.unparsed.count
+        p.parse()
+        self.assertEqual(p.unparsed.count, first)
+
+
+class TestUnparsedReportProperty(unittest.TestCase):
+    """Teste de propriedade para a contagem de conteúdo não parseado (R34)."""
+
+    # Feature: melhorias-analise-e-projeto, Property 22: Contagem de não parseados é exata
+    # Validates: Requirements 34.1, 34.2, 34.3
+    @settings(max_examples=200)
+    @given(operations=st.lists(st.sampled_from(["section", "message"]), max_size=50))
+    def test_count_is_exact(self, operations: list[str]) -> None:
+        """A contagem reportada deve igualar o número de itens efetivamente ignorados.
+
+        Para qualquer sequência de registros de seções/mensagens em um relatório
+        novo:
+
+        - ``count`` deve ser igual a ``section_count + message_count`` (R34.1);
+        - cada contagem parcial deve refletir exatamente os itens daquele tipo
+          (R34.2);
+        - sem nenhum registro, ``count == 0`` sem erro (R34.3).
+        """
+        report = UnparsedReport()
+
+        # Relatório novo começa vazio, sem erro (R34.3).
+        self.assertEqual(report.count, 0)
+        self.assertEqual(report.section_count, 0)
+        self.assertEqual(report.message_count, 0)
+
+        # Aplicar a sequência de operações, contando cada tipo manualmente.
+        expected_sections = 0
+        expected_messages = 0
+        for op in operations:
+            if op == "section":
+                report.record_section("motivo", "fonte.html")
+                expected_sections += 1
+            else:
+                report.record_message("motivo", "fonte.html")
+                expected_messages += 1
+
+        # As contagens parciais devem ser exatas (R34.2).
+        self.assertEqual(report.section_count, expected_sections)
+        self.assertEqual(report.message_count, expected_messages)
+
+        # A contagem total deve igualar a soma das parciais e o total de
+        # operações realizadas (R34.1).
+        self.assertEqual(report.count, report.section_count + report.message_count)
+        self.assertEqual(report.count, len(operations))
+
+        # Após limpar, o relatório volta a ficar vazio sem erro (R34.3).
+        report.clear()
+        self.assertEqual(report.count, 0)
+
+
+class TestDecodeBytes(unittest.TestCase):
+    """Testes para a decodificação de bytes com fallback de encoding."""
+
+    def test_decode_utf8(self):
+        raw = "Olá Açúcar".encode()
+        self.assertEqual(MetaRecordsParser._decode_bytes(raw), "Olá Açúcar")
+
+    def test_decode_latin1(self):
+        raw = "Olá".encode("latin-1")
+        # latin-1 está na cadeia de fallback; não deve lançar
+        self.assertIsInstance(MetaRecordsParser._decode_bytes(raw), str)
 
 
 if __name__ == "__main__":

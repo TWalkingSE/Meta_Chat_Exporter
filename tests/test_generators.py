@@ -2,8 +2,8 @@
 Testes para os geradores HTML com escrita em stream.
 """
 
-import sys
 import os
+import sys
 import unittest
 from datetime import datetime
 from pathlib import Path
@@ -11,9 +11,9 @@ from pathlib import Path
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from generators_single import ChatHTMLGenerator
-from generators_all import AllChatsHTMLGenerator
-from models import (
+from meta_chat_exporter.generators_all import AllChatsHTMLGenerator
+from meta_chat_exporter.generators_single import ChatHTMLGenerator
+from meta_chat_exporter.models import (
     Attachment,
     GenericCategory,
     GenericRecord,
@@ -74,10 +74,12 @@ class TestStreamedHTMLGenerators(unittest.TestCase):
                 output_path.unlink()
 
     def test_single_chat_write_to_file(self):
-        thread = _make_thread(messages=[
-            _make_msg(author="owner", author_id="100", body="Olá"),
-            _make_msg(author="friend", author_id="200", body="Tudo bem?"),
-        ])
+        thread = _make_thread(
+            messages=[
+                _make_msg(author="owner", author_id="100", body="Olá"),
+                _make_msg(author="friend", author_id="200", body="Tudo bem?"),
+            ]
+        )
         generator = ChatHTMLGenerator(thread, "owner", "100")
 
         generator.write_to_file(self.single_output)
@@ -88,10 +90,12 @@ class TestStreamedHTMLGenerators(unittest.TestCase):
         self.assertIn("Meta Chat Exporter", content)
 
     def test_all_chats_write_to_file(self):
-        thread = _make_thread(messages=[
-            _make_msg(author="owner", author_id="100", body="Mensagem 1"),
-            _make_msg(author="friend", author_id="200", body="Mensagem 2"),
-        ])
+        thread = _make_thread(
+            messages=[
+                _make_msg(author="owner", author_id="100", body="Mensagem 1"),
+                _make_msg(author="friend", author_id="200", body="Mensagem 2"),
+            ]
+        )
         generator = AllChatsHTMLGenerator([thread], "owner", "100")
 
         generator.write_to_file(self.all_output)
@@ -108,14 +112,16 @@ class TestStreamedHTMLGenerators(unittest.TestCase):
             file_type="image/jpeg",
             local_path="linked_media/imagem_teste.jpg",
         )
-        thread = _make_thread(messages=[
-            _make_msg(
-                author="friend",
-                author_id="200",
-                body="Com anexo",
-                attachments=[attachment],
-            ),
-        ])
+        thread = _make_thread(
+            messages=[
+                _make_msg(
+                    author="friend",
+                    author_id="200",
+                    body="Com anexo",
+                    attachments=[attachment],
+                ),
+            ]
+        )
         profile_media = ProfileMedia(
             photos=[
                 Photo(

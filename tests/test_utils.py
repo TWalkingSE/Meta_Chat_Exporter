@@ -2,14 +2,67 @@
 Testes para o módulo utils.py - Funções utilitárias
 """
 
-import sys
 import os
+import sys
 import unittest
 
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils import clean_message_body, translate_message, get_file_type
+from meta_chat_exporter.utils import (
+    clean_message_body,
+    escape_html,
+    get_file_type,
+    is_safe_relative_path,
+    is_safe_url,
+    translate_message,
+)
+
+
+class TestEscapeHtml(unittest.TestCase):
+    """Testes para o escape centralizado de HTML"""
+
+    def test_escapa_menor_que(self):
+        self.assertEqual(escape_html("a < b"), "a &lt; b")
+
+    def test_escapa_maior_que(self):
+        self.assertEqual(escape_html("a > b"), "a &gt; b")
+
+    def test_escapa_e_comercial(self):
+        self.assertEqual(escape_html("Tom & Jerry"), "Tom &amp; Jerry")
+
+    def test_escapa_aspas_duplas(self):
+        self.assertEqual(escape_html('diz "olá"'), "diz &quot;olá&quot;")
+
+    def test_escapa_aspas_simples(self):
+        self.assertEqual(escape_html("don't"), "don&#x27;t")
+
+    def test_escapa_tag_completa(self):
+        # Combina <, >, & e aspas em um cenário realista de XSS
+        self.assertEqual(
+            escape_html('<script>alert("x")</script>'),
+            "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;",
+        )
+
+    def test_none_vira_string_vazia(self):
+        self.assertEqual(escape_html(None), "")
+
+    def test_inteiro_convertido_para_str(self):
+        self.assertEqual(escape_html(42), "42")
+
+    def test_lista_convertida_para_str(self):
+        # Valor não-str é convertido com str() e então escapado
+        self.assertEqual(escape_html([1, 2]), "[1, 2]")
+
+    def test_valor_nao_str_com_caracteres_especiais(self):
+        # str() de um valor não-str que produz caracteres especiais é escapado
+        self.assertEqual(escape_html(["<a>"]), "[&#x27;&lt;a&gt;&#x27;]")
+
+    def test_string_sem_caracteres_especiais(self):
+        self.assertEqual(escape_html("texto simples"), "texto simples")
+
+    def test_string_vazia(self):
+        self.assertEqual(escape_html(""), "")
 
 
 class TestCleanMessageBody(unittest.TestCase):
@@ -153,6 +206,64 @@ class TestGetFileType(unittest.TestCase):
 
     def test_uppercase_extension(self):
         self.assertEqual(get_file_type("PHOTO.JPG"), "image/jpeg")
+
+
+class TestIsSafeRelativePath(unittest.TestCase):
+    """Testes para a validação de caminhos relativos seguros"""
+
+    def test_simple_relative(self):
+        self.assertTrue(is_safe_relative_path("photos/image.jpg"))
+
+    def test_filename_only(self):
+        self.assertTrue(is_safe_relative_path("foto.png"))
+
+    def test_dot_in_filename_is_safe(self):
+        # Não deve ter falso-positivo com ".." dentro do nome do arquivo
+        self.assertTrue(is_safe_relative_path("foto..jpg"))
+        self.assertTrue(is_safe_relative_path("a/b..c/d.png"))
+
+    def test_leading_dot_slash(self):
+        self.assertTrue(is_safe_relative_path("./photos/x.jpg"))
+
+    def test_empty_is_unsafe(self):
+        self.assertFalse(is_safe_relative_path(""))
+
+    def test_parent_traversal_unsafe(self):
+        self.assertFalse(is_safe_relative_path("../etc/passwd"))
+        self.assertFalse(is_safe_relative_path("a/../../b"))
+        self.assertFalse(is_safe_relative_path(".."))
+
+    def test_absolute_posix_unsafe(self):
+        self.assertFalse(is_safe_relative_path("/etc/passwd"))
+
+    def test_windows_drive_unsafe(self):
+        self.assertFalse(is_safe_relative_path("C:/Windows/system32"))
+        self.assertFalse(is_safe_relative_path("C:\\Windows\\system32"))
+
+    def test_backslash_traversal_unsafe(self):
+        self.assertFalse(is_safe_relative_path("..\\secret"))
+        self.assertFalse(is_safe_relative_path("a\\..\\b"))
+
+    def test_unc_path_unsafe(self):
+        self.assertFalse(is_safe_relative_path("\\\\server\\share"))
+
+
+class TestIsSafeUrl(unittest.TestCase):
+    def test_http_https_mailto_ok(self):
+        self.assertTrue(is_safe_url("https://example.com/x"))
+        self.assertTrue(is_safe_url("http://example.com"))
+        self.assertTrue(is_safe_url("mailto:a@b.com"))
+
+    def test_javascript_and_data_rejected(self):
+        self.assertFalse(is_safe_url("javascript:alert(1)"))
+        self.assertFalse(is_safe_url("data:text/html,hi"))
+        self.assertFalse(is_safe_url("vbscript:msgbox(1)"))
+
+    def test_empty_and_relative_rejected(self):
+        self.assertFalse(is_safe_url(""))
+        self.assertFalse(is_safe_url(None))
+        self.assertFalse(is_safe_url("/path/only"))
+        self.assertFalse(is_safe_url("//evil.example/x"))
 
 
 if __name__ == "__main__":

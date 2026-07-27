@@ -2,25 +2,43 @@
 Testes para os regex pré-compilados em constants.py
 """
 
-import sys
 import os
+import sys
 import unittest
 
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from constants import (
-    RE_THREAD, RE_ACCOUNT_ID, RE_TARGET, RE_PARTICIPANTS,
-    RE_USERNAME, RE_AI_STATUS, RE_THREAD_NAME, RE_AUTHOR, RE_SENT,
-    RE_BODY, RE_DISAPPEARING, RE_DISAPPEARING_DURATION, RE_LINKED_MEDIA,
-    RE_SHARE_URL, RE_SHARE_TEXT, RE_CALL_TYPE, RE_CALL_DURATION,
-    RE_CALL_MISSED, RE_PAGE_BREAK_FULL, RE_SUBSCRIPTION_TYPE,
-    RE_SUBSCRIPTION_USERS, RE_PAST_PARTICIPANTS, RE_READ_RECEIPTS,
-    RE_PAYMENT, RE_HTML_TAGS, RE_PAGE_BREAK, RE_MULTIPLE_SPACES,
-    TRANSLATIONS, TRANSLATIONS_KEYS_SORTED,
-    get_timezone_offset, set_timezone_offset
-)
 from datetime import timedelta
+
+from meta_chat_exporter.constants import (
+    RE_ACCOUNT_ID,
+    RE_AI_STATUS,
+    RE_AUTHOR,
+    RE_BODY,
+    RE_CALL_DURATION,
+    RE_CALL_MISSED,
+    RE_CALL_TYPE,
+    RE_DISAPPEARING,
+    RE_HTML_TAGS,
+    RE_LINKED_MEDIA,
+    RE_MULTIPLE_SPACES,
+    RE_PAGE_BREAK,
+    RE_PAGE_BREAK_FULL,
+    RE_PAYMENT,
+    RE_READ_RECEIPTS,
+    RE_SENT,
+    RE_SHARE_TEXT,
+    RE_SHARE_URL,
+    RE_SUBSCRIPTION_TYPE,
+    RE_TARGET,
+    RE_THREAD,
+    RE_USERNAME,
+    TRANSLATIONS,
+    TRANSLATIONS_KEYS_SORTED,
+    get_timezone_offset,
+    set_timezone_offset,
+)
 
 
 class TestThreadRegex(unittest.TestCase):
@@ -39,7 +57,7 @@ class TestThreadRegex(unittest.TestCase):
         self.assertEqual(match.group(1), "9876543210123")
 
     def test_no_match(self):
-        text = 'Random text without thread marker'
+        text = "Random text without thread marker"
         match = RE_THREAD.search(text)
         self.assertIsNone(match)
 
@@ -68,23 +86,23 @@ class TestUsernameRegex(unittest.TestCase):
     """Testes para RE_USERNAME"""
 
     def test_basic_match(self):
-        text = 'john_doe (instagram: 12345)'
+        text = "john_doe (instagram: 12345)"
         matches = RE_USERNAME.findall(text)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0], ('john_doe', 'instagram', '12345'))
+        self.assertEqual(matches[0], ("john_doe", "instagram", "12345"))
 
     def test_multiple_users(self):
-        text = 'user1 (instagram: 100), user2 (facebook: 200)'
+        text = "user1 (instagram: 100), user2 (facebook: 200)"
         matches = RE_USERNAME.findall(text)
         self.assertEqual(len(matches), 2)
-        self.assertEqual(matches[0][0], 'user1')
-        self.assertEqual(matches[1][0], 'user2')
+        self.assertEqual(matches[0][0], "user1")
+        self.assertEqual(matches[1][0], "user2")
 
     def test_username_with_dots(self):
-        text = 'user.name.test (instagram: 100)'
+        text = "user.name.test (instagram: 100)"
         matches = RE_USERNAME.findall(text)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0][0], 'user.name.test')
+        self.assertEqual(matches[0][0], "user.name.test")
 
 
 class TestAuthorRegex(unittest.TestCase):
@@ -94,9 +112,9 @@ class TestAuthorRegex(unittest.TestCase):
         text = 'Author<div class="m"><div>john_doe (instagram: 12345)'
         match = RE_AUTHOR.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1).strip(), 'john_doe')
-        self.assertEqual(match.group(2).strip(), 'instagram')
-        self.assertEqual(match.group(3).strip(), '12345')
+        self.assertEqual(match.group(1).strip(), "john_doe")
+        self.assertEqual(match.group(2).strip(), "instagram")
+        self.assertEqual(match.group(3).strip(), "12345")
 
 
 class TestSentRegex(unittest.TestCase):
@@ -106,7 +124,7 @@ class TestSentRegex(unittest.TestCase):
         text = 'Sent<div class="m"><div>2024-01-15 13:30:00 UTC'
         match = RE_SENT.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '2024-01-15 13:30:00 UTC')
+        self.assertEqual(match.group(1), "2024-01-15 13:30:00 UTC")
 
     def test_no_match_without_utc(self):
         text = 'Sent<div class="m"><div>2024-01-15 13:30:00'
@@ -121,7 +139,7 @@ class TestBodyRegex(unittest.TestCase):
         text = 'Body<div class="m"><div>Hello World<div class="p">'
         match = RE_BODY.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Hello World')
+        self.assertEqual(match.group(1), "Hello World")
 
 
 class TestDisappearingRegex(unittest.TestCase):
@@ -131,13 +149,13 @@ class TestDisappearingRegex(unittest.TestCase):
         text = 'Disappearing Message<div class="m"><div>On'
         match = RE_DISAPPEARING.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'On')
+        self.assertEqual(match.group(1), "On")
 
     def test_off(self):
         text = 'Disappearing Message<div class="m"><div>Off'
         match = RE_DISAPPEARING.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Off')
+        self.assertEqual(match.group(1), "Off")
 
 
 class TestLinkedMediaRegex(unittest.TestCase):
@@ -147,7 +165,7 @@ class TestLinkedMediaRegex(unittest.TestCase):
         text = 'Linked Media File:<div class="m"><div>photos/image001.jpg'
         matches = RE_LINKED_MEDIA.findall(text)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0], 'photos/image001.jpg')
+        self.assertEqual(matches[0], "photos/image001.jpg")
 
 
 class TestShareRegex(unittest.TestCase):
@@ -157,13 +175,13 @@ class TestShareRegex(unittest.TestCase):
         text = 'Url<div class="m"><div>https://example.com/post'
         match = RE_SHARE_URL.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'https://example.com/post')
+        self.assertEqual(match.group(1), "https://example.com/post")
 
     def test_text_match(self):
         text = 'Text<div class="m"><div>Cool post!'
         match = RE_SHARE_TEXT.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Cool post!')
+        self.assertEqual(match.group(1), "Cool post!")
 
 
 class TestCallRegex(unittest.TestCase):
@@ -173,25 +191,25 @@ class TestCallRegex(unittest.TestCase):
         text = 'Type<div class="m"><div>Video'
         match = RE_CALL_TYPE.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Video')
+        self.assertEqual(match.group(1), "Video")
 
     def test_call_duration(self):
         text = 'Duration<div class="m"><div>300'
         match = RE_CALL_DURATION.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '300')
+        self.assertEqual(match.group(1), "300")
 
     def test_call_missed_true(self):
         text = 'Missed<div class="m"><div>true'
         match = RE_CALL_MISSED.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1).lower(), 'true')
+        self.assertEqual(match.group(1).lower(), "true")
 
     def test_call_missed_false(self):
         text = 'Missed<div class="m"><div>false'
         match = RE_CALL_MISSED.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1).lower(), 'false')
+        self.assertEqual(match.group(1).lower(), "false")
 
 
 class TestSubscriptionRegex(unittest.TestCase):
@@ -201,25 +219,25 @@ class TestSubscriptionRegex(unittest.TestCase):
         text = 'Subscription Event stuff Type<div class="m"><div>subscribe'
         match = RE_SUBSCRIPTION_TYPE.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'subscribe')
+        self.assertEqual(match.group(1), "subscribe")
 
     def test_unsubscribe(self):
         text = 'Subscription Event stuff Type<div class="m"><div>unsubscribe'
         match = RE_SUBSCRIPTION_TYPE.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'unsubscribe')
+        self.assertEqual(match.group(1), "unsubscribe")
 
 
 class TestPaymentRegex(unittest.TestCase):
     """Testes para RE_PAYMENT"""
 
     def test_match(self):
-        text = 'A payment request was auto-detected.'
+        text = "A payment request was auto-detected."
         match = RE_PAYMENT.search(text)
         self.assertIsNotNone(match)
 
     def test_case_insensitive(self):
-        text = 'PAYMENT REQUEST WAS AUTO-DETECTED'
+        text = "PAYMENT REQUEST WAS AUTO-DETECTED"
         match = RE_PAYMENT.search(text)
         self.assertIsNotNone(match)
 
@@ -231,13 +249,13 @@ class TestReadReceiptsRegex(unittest.TestCase):
         text = 'Read Receipts<div class="m"><div>Enabled'
         match = RE_READ_RECEIPTS.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Enabled')
+        self.assertEqual(match.group(1), "Enabled")
 
     def test_disabled(self):
         text = 'Read Receipts<div class="m"><div>Disabled'
         match = RE_READ_RECEIPTS.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Disabled')
+        self.assertEqual(match.group(1), "Disabled")
 
 
 class TestPageBreakFullRegex(unittest.TestCase):
@@ -245,9 +263,9 @@ class TestPageBreakFullRegex(unittest.TestCase):
 
     def test_basic_match(self):
         text = '</div><div id="page_42" class="pageBreak">Meta Platforms Business Record Page 42</div><div>'
-        result = RE_PAGE_BREAK_FULL.sub('', text)
-        self.assertNotIn('pageBreak', result)
-        self.assertNotIn('Meta Platforms Business Record Page', result)
+        result = RE_PAGE_BREAK_FULL.sub("", text)
+        self.assertNotIn("pageBreak", result)
+        self.assertNotIn("Meta Platforms Business Record Page", result)
 
 
 class TestCleaningRegex(unittest.TestCase):
@@ -255,18 +273,18 @@ class TestCleaningRegex(unittest.TestCase):
 
     def test_html_tags_removal(self):
         text = '<div class="test">Hello</div>'
-        result = RE_HTML_TAGS.sub('', text)
-        self.assertEqual(result, 'Hello')
+        result = RE_HTML_TAGS.sub("", text)
+        self.assertEqual(result, "Hello")
 
     def test_page_break_removal(self):
-        text = 'Hello Meta Platforms Business Record Page 42 World'
-        result = RE_PAGE_BREAK.sub('', text)
-        self.assertNotIn('Meta Platforms Business Record Page', result)
+        text = "Hello Meta Platforms Business Record Page 42 World"
+        result = RE_PAGE_BREAK.sub("", text)
+        self.assertNotIn("Meta Platforms Business Record Page", result)
 
     def test_multiple_spaces(self):
-        text = 'Hello    World'
-        result = RE_MULTIPLE_SPACES.sub(' ', text)
-        self.assertEqual(result, 'Hello World')
+        text = "Hello    World"
+        result = RE_MULTIPLE_SPACES.sub(" ", text)
+        self.assertEqual(result, "Hello World")
 
 
 class TestAIStatusRegex(unittest.TestCase):
@@ -276,13 +294,13 @@ class TestAIStatusRegex(unittest.TestCase):
         text = 'AI<div class="m"><div>true'
         match = RE_AI_STATUS.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1).lower(), 'true')
+        self.assertEqual(match.group(1).lower(), "true")
 
     def test_false(self):
         text = 'AI<div class="m"><div>false'
         match = RE_AI_STATUS.search(text)
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(1).lower(), 'false')
+        self.assertEqual(match.group(1).lower(), "false")
 
     def test_case_insensitive(self):
         text = 'AI<div class="m"><div>True'
@@ -300,8 +318,7 @@ class TestTranslations(unittest.TestCase):
         """Verifica que chaves estão ordenadas por comprimento decrescente"""
         for i in range(len(TRANSLATIONS_KEYS_SORTED) - 1):
             self.assertGreaterEqual(
-                len(TRANSLATIONS_KEYS_SORTED[i]),
-                len(TRANSLATIONS_KEYS_SORTED[i + 1])
+                len(TRANSLATIONS_KEYS_SORTED[i]), len(TRANSLATIONS_KEYS_SORTED[i + 1])
             )
 
     def test_all_keys_in_sorted(self):

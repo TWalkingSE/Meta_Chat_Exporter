@@ -23,3 +23,5 @@ conversas_*.csv
 tests/test_*_stream.html
 
 *.bak
+
+pytest_log.txt

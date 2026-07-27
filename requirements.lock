@@ -1,0 +1,32 @@
+# =============================================================================
+# Arquivo de lock — dependências de RUNTIME com versões fixadas (pinadas)
+# =============================================================================
+#
+# Objetivo (Requisito 32 — Reprodutibilidade de dependências):
+#   Garantir que a instalação resolva SEMPRE o mesmo conjunto de versões,
+#   incluindo as dependências transitivas.
+#
+# Uso (instalação reproduzível):
+#   pip install -r requirements.lock
+#
+# Notas:
+#   - As versões aqui foram fixadas a partir do ambiente validado do projeto.
+#   - O arquivo requirements.txt e o pyproject.toml mantêm especificadores
+#     abertos (>=) para flexibilidade de desenvolvimento; este lock é a fonte
+#     de verdade para instalações reproduzíveis.
+#   - Para atualizar o lock, reinstale/atualize as dependências e regenere
+#     com: pip freeze (filtrando apenas o grafo de runtime).
+#
+# Dependências diretas declaradas em pyproject.toml:
+#   - PyQt6>=6.6.0
+#   - beautifulsoup4>=4.12.0
+
+# --- PyQt6 (GUI) e dependências transitivas ---
+PyQt6==6.10.2
+PyQt6-Qt6==6.10.2
+PyQt6_sip==13.11.0
+
+# --- beautifulsoup4 (parsing HTML) e dependências transitivas ---
+beautifulsoup4==4.14.3
+soupsieve==2.8.3
+typing_extensions==4.15.0

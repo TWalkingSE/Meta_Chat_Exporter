@@ -1,0 +1,36 @@
+# =============================================================================
+# Arquivo de lock — dependências de DESENVOLVIMENTO com versões fixadas
+# =============================================================================
+#
+# Objetivo (Requisito 32 — Reprodutibilidade de dependências):
+#   Fixar as versões das ferramentas de desenvolvimento/qualidade e testes
+#   para instalações reproduzíveis.
+#
+# Uso (ambiente de desenvolvimento reproduzível):
+#   pip install -r requirements.lock -r requirements-dev.lock
+#
+# Notas:
+#   - pytest e hypothesis foram fixados a partir do ambiente validado.
+#   - ruff foi fixado na versão efetivamente usada pelo projeto (cache 0.8.4).
+#   - mypy, pytest-cov e pre-commit foram fixados em releases estáveis
+#     compatíveis com os pisos declarados em pyproject.toml / requirements-dev.txt.
+#   - requirements-dev.txt e pyproject.toml mantêm especificadores abertos (>=);
+#     este lock é a fonte de verdade para instalações reproduzíveis.
+
+# --- Testes ---
+pytest==9.0.3
+pytest-cov==6.0.0
+hypothesis==6.155.7
+
+# --- Qualidade / lint / tipos ---
+ruff==0.8.4
+mypy==1.13.0
+pre-commit==4.0.1
+
+# --- Dependências transitivas verificadas (pytest / hypothesis) ---
+colorama==0.4.6
+iniconfig==2.3.0
+packaging==26.0
+pluggy==1.6.0
+Pygments==2.20.0
+sortedcontainers==2.4.0

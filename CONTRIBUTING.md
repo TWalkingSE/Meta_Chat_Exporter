@@ -19,9 +19,13 @@ venv\Scripts\activate
 # Linux/macOS
 source venv/bin/activate
 
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+pip install --upgrade pip
+pip install -e ".[dev]"
 ```
+
+> Isso instala o pacote em modo editável junto com todas as ferramentas de
+> desenvolvimento (pytest, ruff, mypy, hypothesis, etc.). Para reproduzir versões
+> exatas, use `pip install -r requirements.lock -r requirements-dev.lock`.
 
 ## Rodando os testes
 

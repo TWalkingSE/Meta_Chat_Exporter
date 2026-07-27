@@ -2,20 +2,19 @@
 Testes para o módulo inject_transcriptions.py - Injeção de transcrições em HTML
 """
 
-import sys
 import os
+import sys
 import unittest
 from pathlib import Path
 
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from inject_transcriptions import (
-    inject_transcriptions_into_html,
+from meta_chat_exporter.inject_transcriptions import (
     _build_transcription_html,
     _find_transcription,
+    inject_transcriptions_into_html,
 )
-
 
 # HTML de teste que simula a saída dos geradores
 SAMPLE_HTML_NO_TRANSCRIPTION = """\
@@ -142,6 +141,10 @@ class TestInjectTranscriptions(unittest.TestCase):
     def tearDown(self):
         if self.test_html.exists():
             self.test_html.unlink()
+        # inject_transcriptions_into_html cria um backup .bak; limpar também
+        backup = self.test_html.with_suffix(self.test_html.suffix + ".bak")
+        if backup.exists():
+            backup.unlink()
 
     def test_inject_new_transcription(self):
         """Deve injetar transcrição onde não existe"""
@@ -152,9 +155,7 @@ class TestInjectTranscriptions(unittest.TestCase):
             "audio_001": "Olá, tudo bem?",
         }
 
-        injected, already = inject_transcriptions_into_html(
-            self.test_html, transcriptions
-        )
+        injected, already = inject_transcriptions_into_html(self.test_html, transcriptions)
 
         self.assertEqual(injected, 1)
         self.assertEqual(already, 0)
@@ -172,9 +173,7 @@ class TestInjectTranscriptions(unittest.TestCase):
             "audio_002": "Nova transcrição",
         }
 
-        injected, already = inject_transcriptions_into_html(
-            self.test_html, transcriptions
-        )
+        injected, already = inject_transcriptions_into_html(self.test_html, transcriptions)
 
         self.assertEqual(injected, 0)
         self.assertEqual(already, 1)
@@ -192,9 +191,7 @@ class TestInjectTranscriptions(unittest.TestCase):
             "audio_001.m4a": "Uma transcrição",
         }
 
-        injected, already = inject_transcriptions_into_html(
-            self.test_html, transcriptions
-        )
+        injected, already = inject_transcriptions_into_html(self.test_html, transcriptions)
 
         self.assertEqual(injected, 0)
         self.assertEqual(already, 0)
@@ -207,9 +204,7 @@ class TestInjectTranscriptions(unittest.TestCase):
             "outro_audio.m4a": "Transcrição de outro áudio",
         }
 
-        injected, already = inject_transcriptions_into_html(
-            self.test_html, transcriptions
-        )
+        injected, already = inject_transcriptions_into_html(self.test_html, transcriptions)
 
         self.assertEqual(injected, 0)
         self.assertEqual(already, 0)
@@ -218,9 +213,7 @@ class TestInjectTranscriptions(unittest.TestCase):
         """Dict vazio não deve alterar nada"""
         self.test_html.write_text(SAMPLE_HTML_NO_TRANSCRIPTION, encoding="utf-8")
 
-        injected, already = inject_transcriptions_into_html(
-            self.test_html, {}
-        )
+        injected, already = inject_transcriptions_into_html(self.test_html, {})
 
         self.assertEqual(injected, 0)
         self.assertEqual(already, 0)

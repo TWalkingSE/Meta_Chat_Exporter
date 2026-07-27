@@ -2,8 +2,8 @@
 Testes para o módulo consolidation.py - Consolidação de threads
 """
 
-import sys
 import os
+import sys
 import unittest
 from datetime import datetime
 from pathlib import Path
@@ -11,13 +11,20 @@ from pathlib import Path
 # Adicionar diretório pai ao path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models import Thread, Message, Attachment, Participant
-from consolidation import consolidate_threads, get_message_signature
+from meta_chat_exporter.consolidation import consolidate_threads, get_message_signature
+from meta_chat_exporter.models import Attachment, Message, Participant, Thread
 
 
-def _make_msg(author="user1", author_id="100", body="Hello", sent=None,
-              attachments=None, is_call=False, share_url=None,
-              source_file="file1.html"):
+def _make_msg(
+    author="user1",
+    author_id="100",
+    body="Hello",
+    sent=None,
+    attachments=None,
+    is_call=False,
+    share_url=None,
+    source_file="file1.html",
+):
     return Message(
         author=author,
         author_id=author_id,
@@ -38,13 +45,12 @@ def _make_msg(author="user1", author_id="100", body="Hello", sent=None,
     )
 
 
-def _make_thread(thread_id="1", name="", participants=None, messages=None,
-                 base_dir=None):
+def _make_thread(thread_id="1", name="", participants=None, messages=None, base_dir=None):
     return Thread(
         thread_id=thread_id,
         thread_name=name,
-        participants=participants or [Participant("user1", "instagram", "100"),
-                                       Participant("user2", "instagram", "200")],
+        participants=participants
+        or [Participant("user1", "instagram", "100"), Participant("user2", "instagram", "200")],
         messages=messages or [],
         base_dir=base_dir,
     )
@@ -137,27 +143,26 @@ class TestConsolidateThreads(unittest.TestCase):
         self.assertEqual(len(result[0].messages), 1)
 
     def test_merge_participants(self):
-        t1 = _make_thread(thread_id="1",
-                          participants=[Participant("user1", "ig", "100")],
-                          messages=[_make_msg()])
-        t2 = _make_thread(thread_id="1",
-                          participants=[Participant("user2", "ig", "200")],
-                          messages=[_make_msg(body="different")])
+        t1 = _make_thread(
+            thread_id="1", participants=[Participant("user1", "ig", "100")], messages=[_make_msg()]
+        )
+        t2 = _make_thread(
+            thread_id="1",
+            participants=[Participant("user2", "ig", "200")],
+            messages=[_make_msg(body="different")],
+        )
         result = consolidate_threads([t1, t2])
         self.assertEqual(len(result[0].participants), 2)
 
     def test_thread_name_preserved(self):
         t1 = _make_thread(thread_id="1", name="", messages=[_make_msg()])
-        t2 = _make_thread(thread_id="1", name="Chat Name",
-                          messages=[_make_msg(body="B")])
+        t2 = _make_thread(thread_id="1", name="Chat Name", messages=[_make_msg(body="B")])
         result = consolidate_threads([t1, t2])
         self.assertEqual(result[0].thread_name, "Chat Name")
 
     def test_thread_name_not_overwritten(self):
-        t1 = _make_thread(thread_id="1", name="Original Name",
-                          messages=[_make_msg()])
-        t2 = _make_thread(thread_id="1", name="New Name",
-                          messages=[_make_msg(body="B")])
+        t1 = _make_thread(thread_id="1", name="Original Name", messages=[_make_msg()])
+        t2 = _make_thread(thread_id="1", name="New Name", messages=[_make_msg(body="B")])
         result = consolidate_threads([t1, t2])
         self.assertEqual(result[0].thread_name, "Original Name")
 
@@ -181,16 +186,15 @@ class TestConsolidateThreads(unittest.TestCase):
 
     def test_base_dir_updated(self):
         t1 = _make_thread(thread_id="1", messages=[_make_msg()], base_dir=None)
-        t2 = _make_thread(thread_id="1", messages=[_make_msg(body="B")],
-                          base_dir=Path("/some/dir"))
+        t2 = _make_thread(thread_id="1", messages=[_make_msg(body="B")], base_dir=Path("/some/dir"))
         result = consolidate_threads([t1, t2])
         self.assertEqual(result[0].base_dir, Path("/some/dir"))
 
     def test_records_source_prioritized(self):
-        msg1 = _make_msg(body="Hello", sent=datetime(2024, 1, 1, 10, 0),
-                         source_file="some_file.html")
-        msg2 = _make_msg(body="Hello", sent=datetime(2024, 1, 1, 10, 0),
-                         source_file="records.html")
+        msg1 = _make_msg(
+            body="Hello", sent=datetime(2024, 1, 1, 10, 0), source_file="some_file.html"
+        )
+        msg2 = _make_msg(body="Hello", sent=datetime(2024, 1, 1, 10, 0), source_file="records.html")
         t1 = _make_thread(thread_id="1", messages=[msg1])
         t2 = _make_thread(thread_id="1", messages=[msg2])
         result = consolidate_threads([t1, t2])
