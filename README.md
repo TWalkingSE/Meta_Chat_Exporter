@@ -5,7 +5,8 @@ Aplicação em Python para consolidar, analisar e exportar conversas extraídas 
 A versão corrente é **5.4** (métricas de investigação A1–A10, manifesto de
 custódia e tipagem mypy sem isenções de módulos).
 
-<img width="2550" height="1262" alt="image" src="https://github.com/user-attachments/assets/6dac35db-4c91-45fa-9983-5478ef205618" />
+<img width="1908" height="1008" alt="image" src="https://github.com/user-attachments/assets/e81493db-3f11-4f16-862c-e56b51ca5431" />
+
 
 ## Aviso importante
 
